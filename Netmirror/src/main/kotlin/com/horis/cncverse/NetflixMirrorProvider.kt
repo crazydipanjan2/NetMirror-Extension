@@ -69,20 +69,17 @@ class NetflixMirrorProvider : MainAPI() {
             headers = headers,
             referer = "$mainUrl/mobile/home?app=1",
         ).document
-        val items = document.select(".lolomoRow").map {
+        val items = document.select(".tray-container, #top10").map {
             it.toHomePageList()
         }
         return newHomePageResponse(items, false)
     }
 
     private fun Element.toHomePageList(): HomePageList {
-        val name = selectFirst(".row-header-title")?.text()
-    ?: selectFirst("h2.rowHeader")?.text()
-    ?: select("h2, span").text()
-    //article, .top10-post
-    val items = select(".boxart-image, img.lazy").mapNotNull {
-      it.toSearchResult()
-    }
+        val name = select("h2, span").text()
+        val items = select("article, .top10-post").mapNotNull {
+            it.toSearchResult()
+        }
         return HomePageList(name, items)
     }
 
