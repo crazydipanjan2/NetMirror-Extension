@@ -33,7 +33,7 @@ class NetflixMirrorProvider : MainAPI() {
     override var lang = "hi"
 
     override var mainUrl = "https://net52.cc"
-    override var newUrl = "https://net22.cc"
+    private var newUrl = "https://net22.cc"
     
     override var name = "Netflix"
 
@@ -69,7 +69,7 @@ class NetflixMirrorProvider : MainAPI() {
             headers = headers,
             referer = "$mainUrl/mobile/home?app=1",
         ).document
-        val items = document.select(".tray-container, #top10").map {
+        val items = document.select(".lolomoRow").map {
             it.toHomePageList()
         }
         return newHomePageResponse(items, false)
@@ -144,12 +144,6 @@ class NetflixMirrorProvider : MainAPI() {
         val rating = data.match?.replace("IMDb ", "")
         val runTime = convertRuntimeToMinutes(data.runtime.toString())
 
-        val suggest = data.suggest?.map {
-            newAnimeSearchResponse("", Id(it.id).toJson()) {
-                this.posterUrl = "https://imgcdn.kim/poster/v/${it.id}.jpg"
-                posterHeaders = mapOf("Referer" to "$mainUrl/home")
-            }
-        }
 
         if (data.episodes.first() == null) {
             episodes.add(newEpisode(LoadData(title, id)) {
@@ -188,7 +182,6 @@ class NetflixMirrorProvider : MainAPI() {
             this.score =  Score.from10(rating)
             this.duration = runTime
             this.contentRating = data.ua
-            this.recommendations = suggest
         }
     }
 
