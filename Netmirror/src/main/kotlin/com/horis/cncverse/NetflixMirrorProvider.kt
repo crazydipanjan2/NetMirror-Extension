@@ -28,7 +28,7 @@ class NetflixMirrorProvider : MainAPI() {
   override var lang = "hi"
 
   override var mainUrl = "https://net22.cc"
-  private var newUrl = "https://net52.cc"
+  private var newUrl = "https://net22.cc"
   override var name = "Netflix"
 
   override val hasMainPage = true
@@ -241,10 +241,10 @@ class NetflixMirrorProvider : MainAPI() {
           newExtractorLink(
             name,
             it.label,
-            newUrl + it.file,
+            mainUrl + it.file,
             type = ExtractorLinkType.M3U8
           ) {
-            this.referer = "$newUrl/"
+            this.referer = "$mainUrl/"
             this.headers = mapOf(
               "User-Agent" to "Mozilla/5.0 (Android) ExoPlayer",
               "Accept" to "*/*",
@@ -275,6 +275,22 @@ class NetflixMirrorProvider : MainAPI() {
 
     return true
   }
+  
+    @Suppress("ObjectLiteralToLambda")
+    override fun getVideoInterceptor(extractorLink: ExtractorLink): Interceptor? {
+        return object : Interceptor {
+            override fun intercept(chain: Interceptor.Chain): Response {
+                val request = chain.request()
+                if (request.url.toString().contains(".m3u8")) {
+                    val newRequest = request.newBuilder()
+                        .header("Cookie", "hd=on")
+                        .build()
+                    return chain.proceed(newRequest)
+                }
+                return chain.proceed(request)
+            }
+        }
+    }
 
   data class Id(
     val id: String
