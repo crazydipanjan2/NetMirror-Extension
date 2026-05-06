@@ -41,7 +41,7 @@ class NetflixMirrorProvider : MainAPI() {
     
     private suspend fun getCookie(): Map<String, String> {
         if (cookie_value.isEmpty()) {
-            cookie_value = bypass(newUrl)
+            cookie_value = bypass(mainUrl)
         }
         return mapOf (
             "t_hash_t" to cookie_value,
@@ -216,7 +216,7 @@ class NetflixMirrorProvider : MainAPI() {
 
     val token = getVideoToken(mainUrl, newUrl, id, getCookie())
     val playlist = app.get(
-      "$newUrl/playlist.php?id=$id&t=$title&h=$token&tm=${APIHolder.unixTime}",
+      "$newUrl/playlist.php?id=$id&t=$title&tm=${APIHolder.unixTime}",
       headers,
       referer = "$mainUrl/",
       cookies = getCookie()
