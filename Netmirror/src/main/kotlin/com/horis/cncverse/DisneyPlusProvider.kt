@@ -19,7 +19,7 @@ import okhttp3.Response
 import org.jsoup.nodes.Element
 import com.lagradost.cloudstream3.APIHolder.unixTime
 
-class DisneyStudioProvider : MainAPI() {
+class DisneyPlusProvider : MainAPI() {
     companion object {
         var context: Context? = null
     }
