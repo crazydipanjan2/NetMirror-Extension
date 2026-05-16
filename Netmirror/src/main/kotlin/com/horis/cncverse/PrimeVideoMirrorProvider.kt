@@ -81,7 +81,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
         val items = select("article, .top10-post").mapNotNull {
             it.toSearchResult()
         }
-        return HomePageList(name, items, isHorizontalImages = false)
+        return HomePageList(name, items, isHorizontalImages = true)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
@@ -90,7 +90,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
         //     fixUrlNull(selectFirst(".card-img-container img, .top10-img img")?.attr("data-src"))
 
         return newAnimeSearchResponse("", Id(id).toJson()) {
-            this.posterUrl = "https://imgcdn.kim/pv/v/$id.jpg"
+            this.posterUrl = "https://imgcdn.kim/pv/341/$id.jpg"
             posterHeaders = mapOf("Referer" to "$mainUrl/home")
         }
     }
@@ -107,7 +107,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
 
         return data.searchResult.map {
             newAnimeSearchResponse(it.t, Id(it.id).toJson()) {
-                posterUrl = "https://imgcdn.kim/pv/v/${it.id}.jpg"
+                posterUrl = "https://imgcdn.kim/pv/341/${it.id}.jpg"
                 posterHeaders = mapOf("Referer" to "$mainUrl/home")
             }
         }
@@ -155,7 +155,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
                     this.name = it.t
                     this.episode = it.ep.replace("E", "").toIntOrNull()
                     this.season = it.s.replace("S", "").toIntOrNull()
-                    this.posterUrl = "https://imgcdn.kim/pvepimg/${it.id}.jpg"
+                    this.posterUrl = "https://img.nfmirrorcdn.top/pvepimg/${it.id}.jpg"
                     this.runTime = it.time.replace("m", "").toIntOrNull()
                 }
             }
@@ -173,7 +173,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
 
         return newTvSeriesLoadResponse(title, url, type, episodes) {
             posterUrl = "https://imgcdn.kim/pv/v/$id.jpg"
-            backgroundPosterUrl = "https://imgcdn.kim/pv/h/$id.jpg"
+            backgroundPosterUrl = "https://imgcdn.kim/pv/341/$id.jpg"
             posterHeaders = mapOf("Referer" to "$mainUrl/home")
             plot = data.desc
             year = data.year.toIntOrNull()
@@ -207,7 +207,7 @@ class PrimeVideoMirrorProvider : MainAPI() {
                     name = it.t
                     episode = it.ep.replace("E", "").toIntOrNull()
                     season = it.s.replace("S", "").toIntOrNull()
-                    this.posterUrl = "https://imgcdn.kim/pvepimg/${it.id}.jpg"
+                    this.posterUrl = "https://img.nfmirrorcdn.top/pvepimg/${it.id}.jpg"
                     this.runTime = it.time.replace("m", "").toIntOrNull()
                 }
             }
@@ -223,43 +223,20 @@ class PrimeVideoMirrorProvider : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        val (title, id) = parseJson<LoadData>(data)
-        val cookies = mapOf(
-            "t_hash_t" to cookie_value,
-            "hd" to "on",
-            "ott" to "pv"
+        val apiBase = resolveApiUrl()
+        val id = parseJson<LoadData>(data).id
+        val response = app.get(
+            "$apiBase/newtv/player.php?id=$id",
+            headers = buildNewTvHeaders("pv", mapOf("Usertoken" to ""))
+        ).parsed<NewTvPlayerResponse>()
+
+        if (response.status != "ok" || response.video_link.isNullOrBlank()) return false
+
+        callback.invoke(
+            newExtractorLink(name, name, response.video_link, type = ExtractorLinkType.M3U8) {
+                this.referer = response.referer ?: apiBase
+            }
         )
-        val playlist = app.get(
-            "$mainUrl/mobile/pv/playlist.php?id=$id&t=$title&tm=${APIHolder.unixTime}",
-            headers,
-            referer = "$mainUrl/home",
-            cookies = cookies
-        ).parsed<PlayList>()
-
-        playlist.forEach { item ->
-            item.sources.forEach {
-                callback.invoke(
-                    newExtractorLink(
-                        name,
-                        it.label,
-                        "$mainUrl/${it.file}",
-                        type = ExtractorLinkType.M3U8
-                    ) {
-                        this.referer = "$mainUrl/home"
-                        this.quality = getQualityFromName(it.file.substringAfter("q=", ""))
-                    }
-                )
-            }
-
-            item.tracks?.filter { it.kind == "captions" }?.map { track ->
-                subtitleCallback.invoke(
-                    newSubtitleFile(
-                        track.label.toString(),
-                        httpsify(track.file.toString())
-                    )
-                )
-            }
-        }
 
         return true
     }

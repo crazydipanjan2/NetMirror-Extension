@@ -152,7 +152,7 @@ class NetflixMirrorProvider : MainAPI() {
                     this.name = it.t
                     this.episode = it.ep.replace("E", "").toIntOrNull()
                     this.season = it.s.replace("S", "").toIntOrNull()
-                    this.posterUrl = "https://imgcdn.kim/poster/v/150/${it.id}.jpg"
+                    this.posterUrl = "https://imgcdn.kim/epimg/150/${it.id}.jpg"
                     this.runTime = it.time.replace("m", "").toIntOrNull()
                 }
             }
@@ -170,7 +170,7 @@ class NetflixMirrorProvider : MainAPI() {
 
         return newTvSeriesLoadResponse(title, url, type, episodes) {
             posterUrl = "https://imgcdn.kim/poster/v/$id.jpg"
-            backgroundPosterUrl = "https://imgcdn.kim/poster/v/$id.jpg"
+            backgroundPosterUrl = "https://imgcdn.kim/poster/h/$id.jpg"
             posterHeaders = mapOf("Referer" to "$mainUrl/home")
             plot = data.desc
             year = data.year.toIntOrNull()
