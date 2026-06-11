@@ -57,15 +57,34 @@ jobs:
 
       - name: Checkout builds branch
         uses: actions/checkout@v4
+        continue-on-error: true
         with:
           ref: builds
           path: builds
 
       - name: Copy build files
         run: |
-          cd src
-          find . -name "*.cs3" -exec cp {} ../builds/ \;
-          cp build/plugins.json ../builds/ 2>/dev/null || echo "plugins.json not found, skipping"
+          if [ ! -d "builds" ]; then
+            mkdir builds
+            cd builds
+            git init
+            git remote add origin https://github.com/${{ github.repository }}.git
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b builds
+            cd ..
+          fi
+
+          # Copy .cs3 files
+          find . -name "*.cs3" -exec cp -t builds/ {} +
+
+          # Copy plugins.json and Netflix.json
+          if [ -f "build/plugins.json" ]; then
+            cp build/plugins.json builds/
+            cp build/plugins.json builds/Netflix.json
+          else
+            echo "plugins.json not found, skipping"
+          fi
 
       - name: Commit and push to builds branch
         run: |
@@ -77,5 +96,5 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "Build from ${{ github.sha }}"
-            git push
+            git push origin builds || git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} builds
           fi

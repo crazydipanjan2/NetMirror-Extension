@@ -32,7 +32,7 @@ class DisneyPlusProvider : MainAPI() {
     )
     override var lang = "hi"
 
-    override var mainUrl = "https://net11.cc"
+    override var mainUrl = "https://net52.cc"
     private var newUrl = "https://net11.cc"
     
     override var name = "Disney Plus"
