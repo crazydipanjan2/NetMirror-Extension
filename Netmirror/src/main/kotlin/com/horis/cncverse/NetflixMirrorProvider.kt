@@ -32,8 +32,8 @@ class NetflixMirrorProvider : MainAPI() {
     )
     override var lang = "hi"
 
-    override var mainUrl = "https://net11.cc"
-    private var newUrl = "https://net11.cc"
+    override var mainUrl = "https://net22.cc"
+    private var newUrl = "https://net22.cc"
     
     override var name = "Netflix"
 
