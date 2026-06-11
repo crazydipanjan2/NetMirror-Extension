@@ -57,25 +57,43 @@ jobs:
 
       - name: Checkout builds branch
         uses: actions/checkout@v4
+        continue-on-error: true
         with:
           ref: builds
           path: builds
 
+      - name: Create builds branch if not exists
+        run: |
+          if [ ! -d "builds" ]; then
+            mkdir builds
+            cd builds
+            git init
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b builds
+            git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
+
       - name: Copy build files
         run: |
-          cd src
-          find . -name "*.cs3" -exec cp {} ../builds/ \;
-          cp build/plugins.json ../builds/ 2>/dev/null || echo "plugins.json not found, skipping"
+          mkdir -p builds
+          find src -name "*.cs3" -exec cp {} builds/ \;
+          cp src/build/plugins.json builds/ 2>/dev/null || echo "plugins.json not found, skipping"
 
       - name: Commit and push to builds branch
         run: |
           cd builds
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ ! -d ".git" ]; then
+            git init
+            git checkout -b builds
+            git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
           git add -A
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
             git commit -m "Build from ${{ github.sha }}"
-            git push
+            git push origin builds --force
           fi
